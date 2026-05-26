@@ -1,4 +1,4 @@
-const PLANFLOW_CACHE = 'planflow-v5-mobile-pwa-20260526-01';
+const PLANFLOW_CACHE = 'planflow-v5-mobile-pwa-20260526-02-share';
 const CORE_ASSETS = [
   './',
   './index.html',
