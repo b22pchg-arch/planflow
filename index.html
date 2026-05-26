@@ -228,6 +228,9 @@ t.sheetStubs=true}if(t.type=="array"){t.type="binary";var a=xk(e,t);t.type="arra
             <button onclick="openSyncModal('export')" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-100 font-semibold py-2.5 px-4 rounded-xl transition flex items-center justify-center gap-2 text-sm border border-slate-700">
                 <svg class="w-4 h-4"><use href="#icon-file-text"></use></svg> Đồng bộ dữ liệu
             </button>
+            <button onclick="manualUpdateApp()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-2.5 px-4 rounded-xl transition flex items-center justify-center gap-2 text-sm shadow-lg shadow-emerald-600/20">
+                <svg class="w-4 h-4"><use href="#icon-loader"></use></svg> Cập nhật bản mới
+            </button>
         </div>
     </aside>
 
@@ -275,6 +278,13 @@ t.sheetStubs=true}if(t.type=="array"){t.type="binary";var a=xk(e,t);t.type="arra
                                     <button onclick="openSyncModal('export')" class="w-full bg-amber-600 hover:bg-amber-500 text-white font-medium py-2.5 px-3 rounded-xl transition text-xs flex items-center justify-center gap-2 shadow-sm"><svg class="w-4 h-4"><use href="#icon-download"></use></svg> Tạo text gửi đi</button>
                                     <button onclick="openSyncModal('import')" class="w-full bg-white hover:bg-amber-100 text-amber-700 font-medium py-2.5 px-3 rounded-xl transition text-xs flex items-center justify-center gap-2 border border-amber-200"><svg class="w-4 h-4"><use href="#icon-upload"></use></svg> Nhận text/file</button>
                                 </div>
+                            </div>
+
+                            <div class="rounded-2xl border border-emerald-200 bg-emerald-50 p-3 mb-3">
+                                <div class="flex items-center gap-2 mb-2 text-emerald-800 font-bold text-sm"><svg class="w-4 h-4"><use href="#icon-loader"></use></svg> Cập nhật ứng dụng PWA</div>
+                                <p class="text-[11px] text-emerald-700 leading-relaxed mb-3">Khi có bản HTML/service worker mới trên máy chủ, bấm nút này để xóa cache cũ và tải lại bản mới. Dữ liệu công việc trong máy vẫn được giữ nguyên.</p>
+                                <button onclick="manualUpdateApp()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-medium py-2.5 px-3 rounded-xl transition text-xs flex items-center justify-center gap-2 shadow-sm"><svg class="w-4 h-4"><use href="#icon-loader"></use></svg> Kiểm tra & cập nhật bản mới</button>
+                                <div id="manual-update-status" class="text-[11px] text-emerald-700 mt-2 font-medium"></div>
                             </div>
 
                             <button onclick="document.getElementById('file-open-edit').click()" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-2.5 px-4 rounded-xl transition text-sm flex items-center justify-center gap-2 shadow-sm shadow-indigo-600/30 mb-2">
@@ -369,10 +379,11 @@ t.sheetStubs=true}if(t.type=="array"){t.type="binary";var a=xk(e,t);t.type="arra
                 <button onclick="closeSyncModal()" class="p-1.5 text-slate-400 hover:text-rose-500 bg-white rounded-full shadow-sm"><svg class="w-5 h-5"><use href="#icon-x"></use></svg></button>
             </div>
             <div class="p-5 overflow-y-auto flex-1 space-y-4">
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div class="grid grid-cols-1 sm:grid-cols-4 gap-3">
                     <button onclick="generateSyncText()" class="bg-amber-600 hover:bg-amber-500 text-white font-semibold py-2.5 px-3 rounded-xl transition text-sm flex items-center justify-center gap-2"><svg class="w-4 h-4"><use href="#icon-download"></use></svg> Tạo text từ máy này</button>
                     <button onclick="copySyncText()" class="bg-slate-800 hover:bg-slate-700 text-white font-semibold py-2.5 px-3 rounded-xl transition text-sm flex items-center justify-center gap-2"><svg class="w-4 h-4"><use href="#icon-file-text"></use></svg> Sao chép text</button>
                     <button onclick="downloadSyncTextFile()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-2.5 px-3 rounded-xl transition text-sm flex items-center justify-center gap-2"><svg class="w-4 h-4"><use href="#icon-download"></use></svg> Tải file .txt</button>
+                    <button onclick="shareSyncTextFile()" class="bg-blue-600 hover:bg-blue-500 text-white font-semibold py-2.5 px-3 rounded-xl transition text-sm flex items-center justify-center gap-2"><svg class="w-4 h-4"><use href="#icon-upload"></use></svg> Chia sẻ file</button>
                 </div>
 
                 <textarea id="sync-text-area" rows="12" class="w-full border border-slate-300 rounded-2xl p-3 text-xs font-mono leading-relaxed bg-slate-50 focus:ring-2 focus:ring-amber-400 focus:border-amber-400 outline-none" placeholder="Máy gửi: bấm 'Tạo text từ máy này' rồi sao chép hoặc tải file .txt.&#10;Máy nhận: dán nội dung text JSON vào đây hoặc chọn file .txt/.json rồi bấm 'Áp dụng / gộp dữ liệu'."></textarea>
@@ -552,19 +563,64 @@ t.sheetStubs=true}if(t.type=="array"){t.type="binary";var a=xk(e,t);t.type="arra
             }
         }
 
-        function downloadSyncTextFile() {
-            const area = document.getElementById('sync-text-area');
-            if(!area.value.trim()) generateSyncText(false);
+        function getSyncFileName() {
             const d = new Date();
             const stamp = d.toISOString().slice(0,16).replace(/[-:T]/g, '');
-            const blob = new Blob(['﻿', area.value], {type: 'text/plain;charset=utf-8'});
+            return `PlanFlow_Sync_Text_${stamp}.txt`;
+        }
+
+        function ensureSyncTextReady() {
+            const area = document.getElementById('sync-text-area');
+            if(!area.value.trim()) generateSyncText(false);
+            return area.value;
+        }
+
+        function downloadSyncTextFile() {
+            const text = ensureSyncTextReady();
+            const blob = new Blob(['﻿', text], {type: 'text/plain;charset=utf-8'});
             const url = URL.createObjectURL(blob);
             const link = document.createElement('a');
             link.href = url;
-            link.download = `PlanFlow_Sync_Text_${stamp}.txt`;
+            link.download = getSyncFileName();
             document.body.appendChild(link); link.click(); document.body.removeChild(link);
             URL.revokeObjectURL(url);
             setSyncStatus('Đã tải file text đồng bộ (.txt).', 'ok');
+        }
+
+        async function shareSyncTextFile() {
+            const text = ensureSyncTextReady();
+            const filename = getSyncFileName();
+            try {
+                const file = new File(['﻿', text], filename, {type: 'text/plain;charset=utf-8'});
+                if(navigator.canShare && navigator.canShare({files: [file]})) {
+                    await navigator.share({
+                        title: 'PlanFlow - File đồng bộ dữ liệu',
+                        text: 'File đồng bộ dữ liệu PlanFlow dạng text JSON.',
+                        files: [file]
+                    });
+                    setSyncStatus('Đã mở bảng chia sẻ file. Hãy chọn Zalo/email/ứng dụng nhận file trên thiết bị.', 'ok');
+                    return;
+                }
+                if(navigator.share && text.length < 120000) {
+                    await navigator.share({
+                        title: 'PlanFlow - Text đồng bộ dữ liệu',
+                        text
+                    });
+                    setSyncStatus('Đã mở bảng chia sẻ text đồng bộ.', 'ok');
+                    return;
+                }
+                downloadSyncTextFile();
+                setSyncStatus('Thiết bị/trình duyệt không hỗ trợ chia sẻ file trực tiếp. Đã tải file .txt để gửi thủ công.', 'muted');
+                alert('Thiết bị này không hỗ trợ chia sẻ file trực tiếp từ trình duyệt. Tôi đã tải file .txt, anh hãy gửi file đó qua Zalo/email/USB.');
+            } catch (err) {
+                if(err && err.name === 'AbortError') {
+                    setSyncStatus('Đã hủy chia sẻ file.', 'muted');
+                    return;
+                }
+                console.error(err);
+                downloadSyncTextFile();
+                setSyncStatus('Không chia sẻ trực tiếp được. Đã tải file .txt để gửi thủ công.', 'err');
+            }
         }
 
         function handleSyncTextFile(e) {
@@ -920,7 +976,7 @@ Lỗi định dạng: ${stats.invalid}`);
             dragTask, allowDrop, dragLeave, dropTask,
             openModal, closeModal, saveTask,
             openSyncModal, closeSyncModal, generateSyncText, copySyncText,
-            downloadSyncTextFile, handleSyncTextFile, applySyncTextFromArea,
+            downloadSyncTextFile, shareSyncTextFile, handleSyncTextFile, applySyncTextFromArea,
             handleExcelOpenAndEdit, addExcelRow, downloadEditedExcel,
             saveExcelEditorToSystem, closeExcelEditor, downloadExcelTemplate,
             handleExcelImport, exportToExcelPro,
@@ -931,25 +987,92 @@ Lỗi định dạng: ${stats.invalid}`);
     </script>
 	<div id="update-banner" class="fixed bottom-20 left-4 right-4 bg-indigo-600 text-white p-4 rounded-xl shadow-2xl hidden flex justify-between items-center z-[100]">
     <span>✨ Đã có phiên bản mới!</span>
-    <button onclick="window.location.reload()" class="bg-white text-indigo-600 px-4 py-2 rounded-lg font-bold">Cập nhật ngay</button>
+    <button onclick="manualUpdateApp(true)" class="bg-white text-indigo-600 px-4 py-2 rounded-lg font-bold">Cập nhật ngay</button>
 </div>
 
 <script>
-    // 1. Đăng ký Service Worker
+    let planflowUpdateInProgress = false;
+
+    function setManualUpdateStatus(message, tone = 'muted') {
+        const el = document.getElementById('manual-update-status');
+        if(el) {
+            const color = tone === 'ok' ? 'text-emerald-700' : tone === 'err' ? 'text-rose-600' : 'text-emerald-700';
+            el.className = `text-[11px] ${color} mt-2 font-medium`;
+            el.innerText = message || '';
+        }
+    }
+
+    async function manualUpdateApp(fromBanner = false) {
+        if(planflowUpdateInProgress) return;
+        if(!navigator.onLine) {
+            alert('Thiết bị đang offline nên chưa thể tải bản mới. Hãy kết nối mạng rồi bấm cập nhật lại.');
+            return;
+        }
+        if(!fromBanner && !confirm('Ứng dụng sẽ xóa cache PWA cũ và tải lại bản mới. Dữ liệu công việc lưu trong máy vẫn được giữ nguyên. Tiếp tục?')) return;
+
+        planflowUpdateInProgress = true;
+        setManualUpdateStatus('Đang kiểm tra bản mới và làm sạch cache cũ...', 'muted');
+
+        try {
+            if('serviceWorker' in navigator) {
+                let regs = await navigator.serviceWorker.getRegistrations();
+                if(!regs.length) {
+                    try { await navigator.serviceWorker.register('sw.js', {updateViaCache: 'none'}); } catch(e) { console.warn(e); }
+                    regs = await navigator.serviceWorker.getRegistrations();
+                }
+
+                for(const reg of regs) {
+                    try { await reg.update(); } catch(e) { console.warn(e); }
+                    const worker = reg.waiting || reg.installing;
+                    if(worker) {
+                        try { worker.postMessage({type: 'SKIP_WAITING'}); } catch(e) { console.warn(e); }
+                    }
+                }
+
+                if(navigator.serviceWorker.controller) {
+                    try { navigator.serviceWorker.controller.postMessage({type: 'CLEAR_CACHE'}); } catch(e) { console.warn(e); }
+                }
+            }
+
+            if('caches' in window) {
+                const keys = await caches.keys();
+                await Promise.all(keys.map(key => caches.delete(key)));
+            }
+
+            localStorage.setItem('planflow_last_manual_update', new Date().toISOString());
+            setManualUpdateStatus('Đã xóa cache cũ. Đang tải lại bản mới...', 'ok');
+            const banner = document.getElementById('update-banner');
+            if(banner) banner.classList.add('hidden');
+
+            setTimeout(() => {
+                const url = new URL(window.location.href);
+                url.searchParams.set('pwa_update', Date.now().toString());
+                window.location.replace(url.toString());
+            }, 700);
+        } catch (err) {
+            console.error(err);
+            planflowUpdateInProgress = false;
+            setManualUpdateStatus('Không cập nhật được: ' + (err.message || 'lỗi không xác định'), 'err');
+            alert('Không cập nhật được bản mới: ' + (err.message || 'lỗi không xác định'));
+        }
+    }
+
+    window.manualUpdateApp = manualUpdateApp;
+
+    // Đăng ký Service Worker và hiện banner khi phát hiện bản mới.
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js').then(reg => {
+        navigator.serviceWorker.register('sw.js', {updateViaCache: 'none'}).then(reg => {
             reg.onupdatefound = () => {
                 const installingWorker = reg.installing;
+                if(!installingWorker) return;
                 installingWorker.onstatechange = () => {
-                    if (installingWorker.state === 'installed') {
-                        if (navigator.serviceWorker.controller) {
-                            // Hiển thị nút update khi có file mới trên server/thư mục
-                            document.getElementById('update-banner').classList.remove('hidden');
-                        }
+                    if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                        const banner = document.getElementById('update-banner');
+                        if(banner) banner.classList.remove('hidden');
                     }
                 };
             };
-        });
+        }).catch(err => console.warn('Không đăng ký được Service Worker:', err));
     }
 </script>
 <link rel="manifest" href="manifest.json">
