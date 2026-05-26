@@ -152,6 +152,14 @@ t.sheetStubs=true}if(t.type=="array"){t.type="binary";var a=xk(e,t);t.type="arra
         #excel-table td[contenteditable="true"] { outline: none; transition: all 0.2s; white-space: pre-wrap; word-break: break-word; }
         #excel-table td[contenteditable="true"]:focus { background-color: #eef2ff; box-shadow: inset 0 0 0 2px #6366f1; border-color: transparent; }
     </style>
+
+    <meta name="theme-color" content="#4f46e5">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="PlanFlow">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon-192.png">
 </head>
 <body class="flex h-screen overflow-hidden text-slate-800">
     <svg style="display: none;" xmlns="http://www.w3.org/2000/svg">
@@ -217,6 +225,12 @@ t.sheetStubs=true}if(t.type=="array"){t.type="binary";var a=xk(e,t);t.type="arra
             <button onclick="switchTab('reports')" id="nav-reports" class="nav-btn w-full flex items-center justify-between p-3 rounded-xl transition text-sm font-medium">
                 <span class="flex items-center gap-3"><svg class="w-5 h-5"><use href="#icon-trending-up"></use></svg> Báo cáo Hiệu suất</span>
             </button>
+            <button onclick="openSyncModal('export')" id="nav-sync" class="nav-btn w-full flex items-center justify-between p-3 rounded-xl transition text-sm font-medium">
+                <span class="flex items-center gap-3"><svg class="w-5 h-5"><use href="#icon-file-text"></use></svg> Đồng bộ dữ liệu</span>
+            </button>
+            <button onclick="manualUpdateApp()" id="nav-update" class="nav-btn w-full flex items-center justify-between p-3 rounded-xl transition text-sm font-medium">
+                <span class="flex items-center gap-3"><svg class="w-5 h-5"><use href="#icon-loader"></use></svg> Cập nhật bản mới</span>
+            </button>
         </nav>
         <div class="p-4 border-t border-slate-800 space-y-3">
             <div class="flex items-center justify-center gap-2 text-xs text-slate-500 font-medium pb-2 border-b border-slate-800/50 cursor-pointer hover:text-slate-300" onclick="toggleSmartSearch(true)">
@@ -241,13 +255,26 @@ t.sheetStubs=true}if(t.type=="array"){t.type="binary";var a=xk(e,t);t.type="arra
                 <h1 class="text-lg font-bold text-slate-900">PlanFlow V5</h1>
             </div>
             <div class="flex items-center gap-2">
-                <button onclick="toggleSmartSearch(true)" class="p-2 text-slate-500 hover:bg-slate-100 rounded-full"><svg class="w-5 h-5"><use href="#icon-search"></use></svg></button>
+                <button onclick="toggleSmartSearch(true)" class="p-2 text-slate-500 hover:bg-slate-100 rounded-full" title="Tìm kiếm"><svg class="w-5 h-5"><use href="#icon-search"></use></svg></button>
                 <button onclick="openSyncModal('export')" class="p-2 text-slate-500 hover:bg-slate-100 rounded-full" title="Đồng bộ dữ liệu"><svg class="w-5 h-5"><use href="#icon-file-text"></use></svg></button>
-                <button onclick="openModal()" class="bg-indigo-600 text-white p-2 rounded-full shadow-lg"><svg class="w-4 h-4"><use href="#icon-plus"></use></svg></button>
+                <button onclick="manualUpdateApp()" class="p-2 text-emerald-600 hover:bg-emerald-50 rounded-full" title="Cập nhật bản mới"><svg class="w-5 h-5"><use href="#icon-loader"></use></svg></button>
+                <button onclick="openModal()" class="bg-indigo-600 text-white p-2 rounded-full shadow-lg" title="Tạo công việc mới"><svg class="w-4 h-4"><use href="#icon-plus"></use></svg></button>
             </div>
         </header>
 
-        <div class="flex-1 overflow-y-auto p-4 md:p-8" id="main-content-scroll">
+        <nav class="md:hidden bg-white border-b border-slate-200 px-2 py-2 overflow-x-auto whitespace-nowrap z-10 shadow-sm" aria-label="Menu nhanh trên mobile">
+            <div class="flex gap-2 min-w-max">
+                <button onclick="switchTab('dashboard')" class="mobile-quick-nav px-3 py-2 rounded-xl bg-indigo-50 text-indigo-700 border border-indigo-100 text-xs font-semibold flex items-center gap-1.5"><svg class="w-4 h-4"><use href="#icon-pie-chart"></use></svg> Dashboard</button>
+                <button onclick="switchTab('tasks')" class="mobile-quick-nav px-3 py-2 rounded-xl bg-slate-50 text-slate-700 border border-slate-200 text-xs font-semibold flex items-center gap-1.5"><svg class="w-4 h-4"><use href="#icon-columns"></use></svg> Bảng CV</button>
+                <button onclick="switchTab('week')" class="mobile-quick-nav px-3 py-2 rounded-xl bg-slate-50 text-slate-700 border border-slate-200 text-xs font-semibold flex items-center gap-1.5"><svg class="w-4 h-4"><use href="#icon-calendar"></use></svg> Lịch tuần</button>
+                <button onclick="switchTab('month')" class="mobile-quick-nav px-3 py-2 rounded-xl bg-slate-50 text-slate-700 border border-slate-200 text-xs font-semibold flex items-center gap-1.5"><svg class="w-4 h-4"><use href="#icon-calendar"></use></svg> Lịch tháng</button>
+                <button onclick="switchTab('reports')" class="mobile-quick-nav px-3 py-2 rounded-xl bg-slate-50 text-slate-700 border border-slate-200 text-xs font-semibold flex items-center gap-1.5"><svg class="w-4 h-4"><use href="#icon-trending-up"></use></svg> Báo cáo</button>
+                <button onclick="openSyncModal('export')" class="mobile-quick-nav px-3 py-2 rounded-xl bg-amber-50 text-amber-700 border border-amber-100 text-xs font-semibold flex items-center gap-1.5"><svg class="w-4 h-4"><use href="#icon-file-text"></use></svg> Đồng bộ</button>
+                <button onclick="manualUpdateApp()" class="mobile-quick-nav px-3 py-2 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-100 text-xs font-semibold flex items-center gap-1.5"><svg class="w-4 h-4"><use href="#icon-loader"></use></svg> Cập nhật</button>
+            </div>
+        </nav>
+
+        <div class="flex-1 overflow-y-auto p-4 pb-24 md:p-8" id="main-content-scroll">
             <section id="tab-dashboard" class="tab-content active">
                 <div class="flex justify-between items-center mb-6">
                     <h2 class="text-2xl font-bold tracking-tight text-slate-900">Tổng quan Không gian làm việc</h2>
@@ -328,11 +355,17 @@ t.sheetStubs=true}if(t.type=="array"){t.type="binary";var a=xk(e,t);t.type="arra
         </div>
     </main>
 
-    <nav class="md:hidden bg-white border-t flex justify-around p-2.5 z-20 fixed bottom-0 left-0 right-0 shadow-xl">
-        <button onclick="switchTab('dashboard')" class="flex flex-col items-center gap-0.5 text-indigo-600"><svg class="w-5 h-5"><use href="#icon-pie-chart"></use></svg><span class="text-[10px]">Trang chủ</span></button>
-        <button onclick="switchTab('tasks')" class="flex flex-col items-center gap-0.5 text-slate-400"><svg class="w-5 h-5"><use href="#icon-columns"></use></svg><span class="text-[10px]">Kanban</span></button>
-        <button onclick="openSyncModal('export')" class="flex flex-col items-center gap-0.5 text-slate-400"><svg class="w-5 h-5"><use href="#icon-file-text"></use></svg><span class="text-[10px]">Đồng bộ</span></button>
-        <button onclick="toggleSmartSearch(true)" class="flex flex-col items-center gap-0.5 text-slate-400"><svg class="w-5 h-5"><use href="#icon-search"></use></svg><span class="text-[10px]">Tìm kiếm</span></button>
+    <nav class="md:hidden bg-white border-t z-20 fixed bottom-0 left-0 right-0 shadow-xl overflow-x-auto" aria-label="Menu dưới mobile">
+        <div class="flex min-w-max px-2 py-2 gap-2">
+            <button onclick="switchTab('dashboard')" class="min-w-[68px] flex flex-col items-center gap-0.5 text-indigo-600"><svg class="w-5 h-5"><use href="#icon-pie-chart"></use></svg><span class="text-[10px]">Trang chủ</span></button>
+            <button onclick="switchTab('tasks')" class="min-w-[68px] flex flex-col items-center gap-0.5 text-slate-500"><svg class="w-5 h-5"><use href="#icon-columns"></use></svg><span class="text-[10px]">Kanban</span></button>
+            <button onclick="switchTab('week')" class="min-w-[68px] flex flex-col items-center gap-0.5 text-slate-500"><svg class="w-5 h-5"><use href="#icon-calendar"></use></svg><span class="text-[10px]">Tuần</span></button>
+            <button onclick="switchTab('month')" class="min-w-[68px] flex flex-col items-center gap-0.5 text-slate-500"><svg class="w-5 h-5"><use href="#icon-calendar"></use></svg><span class="text-[10px]">Tháng</span></button>
+            <button onclick="switchTab('reports')" class="min-w-[68px] flex flex-col items-center gap-0.5 text-slate-500"><svg class="w-5 h-5"><use href="#icon-trending-up"></use></svg><span class="text-[10px]">Báo cáo</span></button>
+            <button onclick="openSyncModal('export')" class="min-w-[68px] flex flex-col items-center gap-0.5 text-amber-600"><svg class="w-5 h-5"><use href="#icon-file-text"></use></svg><span class="text-[10px]">Đồng bộ</span></button>
+            <button onclick="manualUpdateApp()" class="min-w-[68px] flex flex-col items-center gap-0.5 text-emerald-600"><svg class="w-5 h-5"><use href="#icon-loader"></use></svg><span class="text-[10px]">Cập nhật</span></button>
+            <button onclick="toggleSmartSearch(true)" class="min-w-[68px] flex flex-col items-center gap-0.5 text-slate-500"><svg class="w-5 h-5"><use href="#icon-search"></use></svg><span class="text-[10px]">Tìm kiếm</span></button>
+        </div>
     </nav>
 
     <div id="excel-editor-modal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-[70] flex items-center justify-center hidden opacity-0 transition-opacity duration-200">
@@ -1059,22 +1092,37 @@ Lỗi định dạng: ${stats.invalid}`);
 
     window.manualUpdateApp = manualUpdateApp;
 
-    // Đăng ký Service Worker và hiện banner khi phát hiện bản mới.
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js', {updateViaCache: 'none'}).then(reg => {
-            reg.onupdatefound = () => {
-                const installingWorker = reg.installing;
-                if(!installingWorker) return;
-                installingWorker.onstatechange = () => {
-                    if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                        const banner = document.getElementById('update-banner');
-                        if(banner) banner.classList.remove('hidden');
-                    }
+    // Đăng ký Service Worker để PWA có thể mở offline sau lần tải đầu tiên.
+    function registerPlanFlowServiceWorker() {
+        if (!('serviceWorker' in navigator)) {
+            setManualUpdateStatus('Trình duyệt này chưa hỗ trợ Service Worker nên không thể cài offline.', 'err');
+            return;
+        }
+        if (location.protocol === 'file:') {
+            setManualUpdateStatus('PWA offline cần chạy qua http://localhost hoặc HTTPS, không chạy trực tiếp bằng file://.', 'err');
+            console.warn('Service Worker không hoạt động với file://. Hãy đưa index.html, manifest.json, sw.js lên cùng thư mục trên localhost/HTTPS.');
+            return;
+        }
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('./sw.js', {updateViaCache: 'none'}).then(reg => {
+                setManualUpdateStatus('PWA offline đã sẵn sàng sau lần tải đầu tiên.', 'ok');
+                reg.onupdatefound = () => {
+                    const installingWorker = reg.installing;
+                    if(!installingWorker) return;
+                    installingWorker.onstatechange = () => {
+                        if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                            const banner = document.getElementById('update-banner');
+                            if(banner) banner.classList.remove('hidden');
+                        }
+                    };
                 };
-            };
-        }).catch(err => console.warn('Không đăng ký được Service Worker:', err));
+            }).catch(err => {
+                console.warn('Không đăng ký được Service Worker:', err);
+                setManualUpdateStatus('Chưa đăng ký được PWA offline: ' + (err.message || err), 'err');
+            });
+        });
     }
+    registerPlanFlowServiceWorker();
 </script>
-<link rel="manifest" href="manifest.json">
 </body>
 </html>
