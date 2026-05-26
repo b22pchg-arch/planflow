@@ -1,11 +1,25 @@
 {
-  "name": "PlanFlow Enterprise",
+  "name": "PlanFlow Enterprise v5",
   "short_name": "PlanFlow",
-  "start_url": "index.html",
+  "description": "Quản lý kế hoạch, lịch tuần, lịch tháng, báo cáo và đồng bộ thủ công.",
+  "start_url": "./index.html",
+  "scope": "./",
   "display": "standalone",
+  "orientation": "portrait",
   "background_color": "#f8fafc",
   "theme_color": "#4f46e5",
+  "lang": "vi",
   "icons": [
-    { "src": "logo.png", "sizes": "192x192", "type": "image/png" }
+    {
+      "src": "logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": [
+    "productivity",
+    "business",
+    "utilities"
   ]
 }
